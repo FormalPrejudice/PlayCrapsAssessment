@@ -15,11 +15,14 @@ namespace PlayCrapsAssessment
         static bool isFirstRoll;
         static bool isFirstRound;
         static bool isGameOver;
+        // ID's set to auto-increment
         static int pointSet = 0;
         static int RoundId = 0;
         static int GameId = 0;
-        static int CurrentRoundId = 0;
-        static List<int> Rolls = new List<int>();
+        static int PlayerID = 0;
+        //
+        static int? CurrentRoundId = null;
+        static List<Rolls> Rolls = new List<Rolls>();
         static int SelectedPlayerId = 9999999;
 
         public Form1()
@@ -27,8 +30,12 @@ namespace PlayCrapsAssessment
             InitializeComponent();
             PopulatePlayers();
             rollButton.Enabled = false;
+            rollSum.Text = "";
+            winCount.Text = "";
+            lossCount.Text = "";
         }
 
+        #region Player Population
         public void PopulatePlayers()
         {
             using (var _context = new CrapsContext())
@@ -58,16 +65,16 @@ namespace PlayCrapsAssessment
 
         private void AccountDropDown_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(accountDropDown.SelectedIndex == 0)
-            {
-                // We don't want to trigger the buttons to enable off of the default "Please select" option
-                return;
-            }                        
 
-            if(SelectedPlayerId != 9999999)
+            if (accountDropDown.SelectedIndex == 0)
+            {
+                return;
+            }
+
+            if (SelectedPlayerId != 9999999)
             {
                 // We already have a player selected. We shouldn't let them change players at this point unless they start a new game.
-                // Prompt them?
+
                 EndGame("Game over! Changing profiles.");
                 SelectedPlayerId = (int)accountDropDown.SelectedValue;
                 EnableButtons();
@@ -77,18 +84,18 @@ namespace PlayCrapsAssessment
             SelectedPlayerId = (int)accountDropDown.SelectedValue;
             NewGame();
             EnableButtons();
-            rollButton.Enabled = true;            
+            rollButton.Enabled = true;
+
         }
+        #endregion
 
         private void EnableButtons()
         {
-            //Edit button
             editButton.Enabled = true;
-            //Delete button
             deleteButton.Enabled = true;
         }
 
-
+        #region New Game/ End Game Handler
         public void NewGame()
         {
             isFirstRoll = true;
@@ -97,13 +104,13 @@ namespace PlayCrapsAssessment
             rollButton.Text = "Roll";
             label1.Text = "";
             label2.Text = "";
-            pointSet = 0;            
+            pointSet = 0;
 
             Game newGame = new Game
             {
                 PlayerId = SelectedPlayerId,
             };
-            using(var _context = new CrapsContext())
+            using (var _context = new CrapsContext())
             {
                 _context.Game.Add(newGame);
                 _context.SaveChanges();
@@ -118,16 +125,17 @@ namespace PlayCrapsAssessment
             label2.Text = " ";
             label1.Text = EndGameMessage;
         }
+        #endregion
 
-        public void CreateRound(RoundOutcome outcome)
+        #region Round Management
+        public void CreateRound()
         {
             var round = new Round()
             {
-                GameId = GameId,
-                Outcome = outcome
+                GameId = GameId
             };
 
-            using(var _context = new CrapsContext())
+            using (var _context = new CrapsContext())
             {
                 _context.Round.Add(round);
                 _context.SaveChanges();
@@ -137,34 +145,76 @@ namespace PlayCrapsAssessment
 
         public void UpdateRound(RoundOutcome outcome)
         {
-            using(var _context = new CrapsContext())
+            using (var _context = new CrapsContext())
             {
-
+                var currentRound = _context.Round.Where(d => d.RoundId == (int)CurrentRoundId).FirstOrDefault();
+                currentRound.Outcome = outcome;
+                _context.SaveChanges();                    
             }
+
+            FinalizeRoundRolls();
+            CurrentRoundId = null;
         }
 
-        public void SaveRound(RoundOutcome outcome)
+        public void FinalizeRoundRolls()
         {
-            var round = new Round()
+            using (var _context = new CrapsContext())
             {
-                RoundId = RoundId++,
-                GameId = GameId,
-                Outcome = outcome
-            };
+                _context.Rolls.AddRange(Rolls);
+                _context.SaveChanges();
+                Rolls = new List<Rolls>();
+            }            
+        }
 
-            using (var ctx = new CrapsContext())
+        private RoundOutcome CheckFirstRoll(int sum)
+        {
+            int[] win_nums = { 7, 11 };
+            int[] lose_nums = { 2, 3, 12 };
+
+            if (win_nums.Contains(sum))
             {
-                ctx.Round.Add(round);
-                ctx.SaveChanges();
+                return RoundOutcome.WIN;
+            }
+            else if (lose_nums.Contains(sum))
+            {
+                return RoundOutcome.LOSE;
+            }
+            else
+            {
+                isFirstRound = false;
+                UpdateRound(RoundOutcome.POINT);
+                CreateRound();
+                return RoundOutcome.POINT;
             }
         }
 
+        private RoundOutcome CheckRoll(int sum)
+        {
+            if (sum == 7)
+            {
+                UpdateRound(RoundOutcome.LOSE);
+                return RoundOutcome.LOSE;
+            }
+            else if (sum == pointSet)
+            {
+                UpdateRound(RoundOutcome.WIN);
+                return RoundOutcome.WIN;
+            }
+            else
+            {
+                return RoundOutcome.ROLL_AGAIN;
+            }
+        }
+        #endregion
+
+        #region Roll Handling
         private void RollButton_Click(object sender, EventArgs e)
         {
             if (isGameOver)
             {
                 NewGame();
-            } else
+            }
+            else
             {
                 RollDice();
             }
@@ -172,83 +222,70 @@ namespace PlayCrapsAssessment
 
         private RoundOutcome RollDice()
         {
-            if(isFirstRound)
+            if(isFirstRoll)
             {
-                //CreateRound();
+                CreateRound();
             }
 
-
-            // Replace this with call to API.
             Random rand = new Random();
             int dice1 = rand.Next(1, 7);
             int dice2 = rand.Next(1, 7);
-            int sum = dice1 + dice2;
+            int sum = dice1 + dice2;           
+
+            Rolls CurrentRoll = new Rolls()
+            {
+                RoundId = (int)CurrentRoundId,
+                RollValue = sum                
+            };
+
+            Rolls.Add(CurrentRoll);
+
             RoundOutcome outcome;
             if (isFirstRoll)
             {
-                outcome = CheckFirstRoll(dice1,dice2);
+                outcome = CheckFirstRoll(sum);
                 isFirstRoll = false;
             }
             else
             {
-                outcome = CheckRoll(dice1,dice2);
+                outcome = CheckRoll(sum);
             }
 
-            if(outcome == RoundOutcome.WIN)
+            if (outcome == RoundOutcome.WIN)
             {
                 EndGame("You Win!");
-            } else if (outcome == RoundOutcome.LOSE)
+            }
+            else if (outcome == RoundOutcome.LOSE)
             {
                 EndGame("You Lose!");
-            } else if (outcome == RoundOutcome.POINT)
+            }
+            else if (outcome == RoundOutcome.POINT)
             {
                 pointSet = sum;
                 label1.Text = "Point set at: " + sum;
-            }            
+            }
 
             label2.Text = "You rolled: " + sum;
 
             return outcome;
         }
+        #endregion
+        
 
-        private RoundOutcome CheckFirstRoll(int dice1, int dice2)
+        private void AddButton_Click(object sender, EventArgs e)
         {
-            int[] win_nums = { 7, 11 };
-            int[] lose_nums = { 2, 3, 12 };
-            int sum = dice1 + dice2;
-            if (win_nums.Contains(sum)){
-                return RoundOutcome.WIN;
-            } else if (lose_nums.Contains(sum)) {
-                return RoundOutcome.LOSE;
-            } else
+            Player newPlayer = new Player
             {
-                isFirstRound = false;
-                CreateRound(RoundOutcome.POINT);
-                return RoundOutcome.POINT;
+                Name = accountDropDown.Text,
+                Password = "Password"
+            };
+
+            using (var _context = new CrapsContext())
+            {
+                _context.Player.Add(newPlayer);
+                _context.SaveChanges();
+                PlayerID = newPlayer.PlayerId;
             }
         }
-
-        private RoundOutcome CheckRoll(int dice1, int dice2)
-        {
-            int sum = dice1 + dice2;
-            if (sum == 7)
-            {
-                UpdateRound(RoundOutcome.LOSE);
-                return RoundOutcome.LOSE;
-            } else if (sum == pointSet)
-            {
-                UpdateRound(RoundOutcome.WIN);
-                return RoundOutcome.WIN;
-            } else
-            {
-                return RoundOutcome.ROLL_AGAIN;
-            }
-        }
-
-        //protected override void OnClosing(CancelEventArgs e)
-        //{
-        //    base.OnClosing(e);
-        //    _context.Dispose();
-        //}
     }
 }

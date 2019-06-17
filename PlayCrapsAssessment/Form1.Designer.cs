@@ -35,6 +35,12 @@
             this.addButton = new System.Windows.Forms.Button();
             this.editButton = new System.Windows.Forms.Button();
             this.deleteButton = new System.Windows.Forms.Button();
+            this.rollSum = new System.Windows.Forms.Label();
+            this.winCount = new System.Windows.Forms.Label();
+            this.lossCount = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // rollButton
@@ -82,6 +88,7 @@
             this.addButton.TabIndex = 4;
             this.addButton.Text = "Add";
             this.addButton.UseVisualStyleBackColor = true;
+            this.addButton.Click += new System.EventHandler(this.AddButton_Click);
             // 
             // editButton
             // 
@@ -103,11 +110,71 @@
             this.deleteButton.Text = "Delete";
             this.deleteButton.UseVisualStyleBackColor = true;
             // 
+            // rollSum
+            // 
+            this.rollSum.AutoSize = true;
+            this.rollSum.Location = new System.Drawing.Point(76, 47);
+            this.rollSum.Name = "rollSum";
+            this.rollSum.Size = new System.Drawing.Size(12, 13);
+            this.rollSum.TabIndex = 7;
+            this.rollSum.Text = "\\";
+            // 
+            // winCount
+            // 
+            this.winCount.AutoSize = true;
+            this.winCount.Location = new System.Drawing.Point(76, 75);
+            this.winCount.Name = "winCount";
+            this.winCount.Size = new System.Drawing.Size(35, 13);
+            this.winCount.TabIndex = 8;
+            this.winCount.Text = "label3";
+            // 
+            // lossCount
+            // 
+            this.lossCount.AutoSize = true;
+            this.lossCount.Location = new System.Drawing.Point(76, 105);
+            this.lossCount.Name = "lossCount";
+            this.lossCount.Size = new System.Drawing.Size(35, 13);
+            this.lossCount.TabIndex = 9;
+            this.lossCount.Text = "label3";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(21, 105);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(43, 13);
+            this.label3.TabIndex = 12;
+            this.label3.Text = "Losses:";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(21, 75);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(34, 13);
+            this.label4.TabIndex = 11;
+            this.label4.Text = "Wins:";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(21, 47);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(33, 13);
+            this.label5.TabIndex = 10;
+            this.label5.Text = "Rolls:";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.lossCount);
+            this.Controls.Add(this.winCount);
+            this.Controls.Add(this.rollSum);
             this.Controls.Add(this.deleteButton);
             this.Controls.Add(this.editButton);
             this.Controls.Add(this.addButton);
@@ -131,6 +198,12 @@
         private System.Windows.Forms.Button addButton;
         private System.Windows.Forms.Button editButton;
         private System.Windows.Forms.Button deleteButton;
+        private System.Windows.Forms.Label rollSum;
+        private System.Windows.Forms.Label winCount;
+        private System.Windows.Forms.Label lossCount;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
     }
 }
 
