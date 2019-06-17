@@ -89,12 +89,6 @@ namespace PlayCrapsAssessment
         }
         #endregion
 
-        private void EnableButtons()
-        {
-            editButton.Enabled = true;
-            deleteButton.Enabled = true;
-        }
-
         #region New Game/ End Game Handler
         public void NewGame()
         {
@@ -270,11 +264,18 @@ namespace PlayCrapsAssessment
             return outcome;
         }
         #endregion
-        
+
+        #region Button Click Events
+
+        private void EnableButtons()
+        {
+            editButton.Enabled = true;
+            deleteButton.Enabled = true;
+        }
 
         private void AddButton_Click(object sender, EventArgs e)
         {
-            Player newPlayer = new Player
+            Player playerToAdd = new Player
             {
                 Name = accountDropDown.Text,
                 Password = "Password"
@@ -282,10 +283,43 @@ namespace PlayCrapsAssessment
 
             using (var _context = new CrapsContext())
             {
-                _context.Player.Add(newPlayer);
+                _context.Player.Add(playerToAdd);
                 _context.SaveChanges();
-                PlayerID = newPlayer.PlayerId;
+                PlayerID = playerToAdd.PlayerId;
+                MessageBox.Show("Player Added");
+                PopulatePlayers();
             }
         }
+
+        private void DeleteButton_Click(object sender, EventArgs e)
+        {
+            using (var _context = new CrapsContext())
+            {
+                var playerToDelete = _context.Player.Where(x => x.PlayerId == SelectedPlayerId).FirstOrDefault();
+
+                _context.Player.Remove(playerToDelete);
+                _context.SaveChanges();
+                MessageBox.Show("Player Removed");
+                PopulatePlayers();
+            }
+
+        }
+
+        private void EditButton_Click(object sender, EventArgs e)
+        {
+            using (var _context = new CrapsContext())
+            {
+                var playerToEdit = _context.Player.Where(x => x.PlayerId == SelectedPlayerId).FirstOrDefault();
+
+                playerToEdit.Name = accountDropDown.Text;
+                _context.SaveChanges();
+                MessageBox.Show("Player Edited");
+                PopulatePlayers();
+            }
+        }
+
+        #endregion
+
+
     }
 }
